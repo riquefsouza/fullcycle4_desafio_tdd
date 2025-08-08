@@ -9,33 +9,41 @@ import { UserMapper } from './user_mapper';
 
 describe("Booking Mapper", () => {
 
-    it("deve converter BookingEntity em Booking corretamente", () => {
-        // Arrange
-        const property = new PropertyEntity();
+    let property: PropertyEntity;
+    let user: UserEntity;
+    let dateRange: DateRange;
+    let entity: BookingEntity;
+
+    beforeEach(() => {
+        property = new PropertyEntity();
         property.id = "1";
         property.name = "propriedade 1";
         property.description = "casa de inverno";
-        property.maxGuests = 2;
+        property.maxGuests = 4;
         property.basePricePerNight = 200;
 
-        const user = new UserEntity();
+        user = new UserEntity();
         user.id = "1";
         user.name = "João Silva";
 
-        const dateRange = new DateRange(
+        dateRange = new DateRange(
             new Date("2025-08-10"),
             new Date("2025-08-15")
         );
     
-        const entity = new BookingEntity();
+        entity = new BookingEntity();
         entity.id = "1";
         entity.property = property;
         entity.guest = user;
         entity.startDate = dateRange.getStartDate();
         entity.endDate = dateRange.getEndDate();
-        entity.guestCount = 2;
+        entity.guestCount = 4;
         entity.totalPrice = 1000;
         entity.status = "CONFIRMED";
+    });
+    
+    it("deve converter BookingEntity em Booking corretamente", () => {
+        // Arrange
         
         // Act
         const p1 = PropertyMapper.toDomain(property);
@@ -48,55 +56,69 @@ describe("Booking Mapper", () => {
         expect(booking.getProperty()).toStrictEqual(p1);
         expect(booking.getUser()).toStrictEqual(u1);
         expect(booking.getDateRange()).toStrictEqual(dateRange);
-        expect(booking.getGuestCount()).toBe(2);
+        expect(booking.getGuestCount()).toBe(4);
         expect(booking.getTotalPrice()).toBe(1000);
         expect(booking.getStatus()).toBe("CONFIRMED");
     });
-/*
+
     it("deve lançar erro de validação ao faltar campos obrigatórios no BookingEntity", () => {
         // Arrange
-        const entity = new BookingEntity();
-        entity.id = "1";
-        entity.name = "";
-        entity.description = "casa de inverno";
-        entity.maxGuests = 4;
-        entity.basePricePerNight = 200;
-
-        // Act & Assert
-        expect(() => { 
-            BookingMapper.toDomain(entity)
-        }).toThrow("O nome é obrigatório");
-        
-        // Arrange
-        entity.name = "propriedade 1";
-        entity.maxGuests = 0;
+        entity.guestCount = 0;
 
         // Act & Assert
         expect(() => {
-            BookingMapper.toDomain(entity)
-        }).toThrow("O número máximo de hóspedes deve ser maior que zero");
+            const p1 = PropertyMapper.toDomain(property);
+            const u1 = UserMapper.toDomain(user);
+            const booking = BookingMapper.toDomain(entity);
+            p1.addBooking(booking);
+        }).toThrow("O número de hóspedes deve ser maior que zero");
 
+        // Arrange
+        entity.guestCount = 5;
+
+        // Act & Assert
+        expect(() => {
+            const p1 = PropertyMapper.toDomain(property);
+            const u1 = UserMapper.toDomain(user);
+            const booking = BookingMapper.toDomain(entity);
+            p1.addBooking(booking);
+        }).toThrow("Número máximo de hóspedes excedido. Máximo permitido: 4.");
+
+        // Arrange
+        entity.guestCount = 4;
+        const dateRange2 = new DateRange(
+            new Date("2025-08-11"),
+            new Date("2025-08-14")
+        );
+        const p1 = PropertyMapper.toDomain(property);
+        const u1 = UserMapper.toDomain(user);
+        const booking = BookingMapper.toDomain(entity);
+        p1.addBooking(booking);        
+
+        // Act & Assert
+        expect(() => {
+            const booking2 = new Booking("2", p1, u1, dateRange2, 4);
+        }).toThrow("A propriedade não está disponível para o período selecionado.");
     });
 
     it("deve converter Booking para BookingEntity corretamente", () => {
         // Arrange
-        const Booking = new Booking(
-            "1",
-            "Casa de praia",
-            "Uma bela casa na praia",
-            4,
-            200
-        );
+        const p1 = PropertyMapper.toDomain(property);
+        const u1 = UserMapper.toDomain(user);
+        const booking = new Booking("1", p1, u1, dateRange, 4);
 
         // Act
-        const BookingEntity = BookingMapper.toPersistence(Booking);
+        const bookingEntity = BookingMapper.toPersistence(booking);
 
         // Assert
-        expect(BookingEntity.id).toBe("1");
-        expect(BookingEntity.name).toBe("Casa de praia");
-        expect(BookingEntity.description).toBe("Uma bela casa na praia");
-        expect(BookingEntity.maxGuests).toBe(4);
-        expect(BookingEntity.basePricePerNight).toBe(200);
+        expect(bookingEntity.id).toBe("1");
+        expect(bookingEntity.property).toStrictEqual(property);
+        expect(bookingEntity.guest).toStrictEqual(user);
+        expect(bookingEntity.startDate).toBe(dateRange.getStartDate());
+        expect(bookingEntity.endDate).toBe(dateRange.getEndDate());
+        expect(bookingEntity.guestCount).toBe(4);
+        expect(bookingEntity.totalPrice).toBe(1000);
+        expect(bookingEntity.status).toBe("CONFIRMED");
     });
-*/
+
 });
