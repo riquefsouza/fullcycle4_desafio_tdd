@@ -42,16 +42,6 @@ afterAll(async () => {
 });
 
 describe("UserController", () => {
-  beforeAll(async () => {
-    const userRepo = dataSource.getRepository(UserEntity);
-
-    await userRepo.clear();
-
-    await userRepo.save({
-      id: "1",
-      name: "Usuário de Teste",
-    });
-  });
 
   it("deve criar um usuário com sucesso", async () => {
     const response = await request(app).post("/users").send({
